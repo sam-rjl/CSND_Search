@@ -10,8 +10,10 @@ from whoosh.qparser import MultifieldParser
 from jieba.analyse.analyzer import ChineseAnalyzer
 import pymysql
 import datetime
+import sys
+sys.path.append('..')
 from CSDN_SearchEngine.settings import BASE_DIR
-from .DBsettings import *
+from search_engine.DBsettings import *
 
 def get_dbtext(db):
     cursor = db.cursor()
@@ -20,6 +22,7 @@ def get_dbtext(db):
     try:
         cursor.execute(sql)
         result = cursor.fetchall()
+      #  print(result[0][1])
         if result is None:
             print('not found')
             return ' '
@@ -37,8 +40,6 @@ class whoosh_text():
         self.schema= Schema(url=ID(stored=True), title=TEXT(stored=True),
                         nickname=TEXT(stored=True), readcount=TEXT(stored=True)
                         , text=TEXT(stored=True, analyzer=ChineseAnalyzer()), time=DATETIME(stored=True))
-
-
     # 创建索引
     def create_ix(self):
         analyzer = ChineseAnalyzer()
@@ -47,7 +48,7 @@ class whoosh_text():
         if not os.path.exists("index"):
             os.mkdir("index")
         # 创建新索引
-        ix = create_in("index", schema, 'my_index')
+        ix = create_in("index", schema, 'my_indexing')
         # 从数据库中取数据
         db = pymysql.connect(host, user, password, dbname)
         content = get_dbtext(db)
@@ -56,15 +57,16 @@ class whoosh_text():
         # 遍历数据库, 插入doc
         count = 0
         for blog in content:
-            writer.add_document(url=u'%s' % blog[1], title=u'%s' % blog[2], nickname=u'%s' % blog[3],
-                                readcount=u'%s' % blog[4], text=u'%s' % blog[5], time=u'%s' % blog[6])
+            # print(blog[0])
+            writer.add_document(url=u'%s' % blog[0], title=u'%s' % blog[1], nickname=u'%s' % blog[2],
+                                readcount=u'%s' % blog[4], text=u'%s' % blog[6], time=u'%s' % blog[5])
             count += 1
             print('第', count, '篇blog添加成功...')
         writer.commit()
 
     def create_searcher(self):
         # 建立搜索对象
-        ixr = open_dir(BASE_DIR + "\search_engine\index", 'my_indexing')
+        ixr = open_dir(BASE_DIR + "/search_engine/index", 'my_indexing')
         # with ixr.searcher(weighting=scoring.BM25F()) as searcher:
         self.searcher = ixr.searcher(weighting=scoring.BM25F()) # 没有close，可能会内存泄露，记得关服务器。
         # 建立解析器(使用多字段查询解析器)
@@ -77,21 +79,14 @@ class whoosh_text():
         parser = self.parser
         q = parser.parse(query)
         results = searcher.search(q,limit=limit_)
-        # print(len(results))
-        # if results is not None:
-        #     for hit in results:
-        #         print(hit['url'],hit.score,hit['title'])
-        # else:
-        #     print('未查询到结果')
         return results
 
 
 if __name__ == '__main__':
     index = whoosh_text()
     # index.search_document()
-    # index.create_ix()
+    index.create_ix()
     index.create_searcher()
-
     while(1):
         print('Please input the query:')
         query = input()
@@ -103,7 +98,7 @@ if __name__ == '__main__':
         if results is not None:
             for hit in results:
                 # print(hit)
-                print(hit['url'],hit.score,hit.highlights('text'))
+                print(hit['readcount'])#hit.score,hit.highlights('text')
             else:
                 print('未查询到结果')
         print(time2-time1)

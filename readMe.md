@@ -6,9 +6,9 @@
 
 ### 2.效果展示
 
-![主页](https://github.com/SchrodingersBug/CSDN_SearchEngine/blob/master/data/img/index.png?raw=true)
+![主页](data/img/index.png?raw=true)
 
-![结果页面](https://github.com/SchrodingersBug/CSDN_SearchEngine/blob/master/data/img/results.png?raw=true)
+![结果页面](data/img/results.png?raw=true)
 
 详细效果请见展示.pdf
 
@@ -24,10 +24,11 @@ python3.6 + django2.1 + 若干python库
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'csdnBlogs',
-        'USER': 'root',
-        'PASSWORD': 'password',
-        'HOST': '127.0.0.1',
+        'NAME': 'csdnBlogs',#配置query存储{
+        #                                id, query, date}
+        'USER': 'root',#用户名
+        'PASSWORD': 'password',#数据库密码
+        'HOST': '127.0.0.1',#默认端口
         'PORT': '3306',
     }
 }
@@ -43,10 +44,11 @@ driver = webdriver.Chrome(executable_path='/home/chromedriver')
 下载chromedriver，并添加绝对路径。
 
 ```
-username = driver.find_element_by_id('username')
-password = driver.find_element_by_id('password')
-username.send_keys("username")		# 输入csdn登陆账户密码
-password.send_keys("password")		
+username = driver.find_element_by_id('all')
+password = driver.find_element_by_id('password-number')
+username.send_keys("username") #输入csdn的账号密码
+password.send_keys("passward")
+click = driver.find_element_by_xpath('//button[@data-type="account"]')
 ```
 
 #### （3）连接数据库配置 
@@ -58,6 +60,11 @@ user = ''
 password = ''
 dbname = ''  # 数据库名字
 ```
+####  (4)数据库格式
+
+模式名对应数据库配置里的user
+![数据库截图](data/img/database_form.png)
+
 
 ### 5. 文件介绍
 

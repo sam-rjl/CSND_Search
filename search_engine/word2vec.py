@@ -2,12 +2,14 @@ import pymysql
 import jieba
 import re
 from gensim.models import word2vec, Word2Vec
+import sys
+sys.path.append('..')
 from CSDN_SearchEngine.settings import BASE_DIR
-from .DBsettings import *
+from search_engine.DBsettings import *
 
 def get_dbtext(db):
     cursor = db.cursor()
-    sql = "select title from search_engine_csdnblog"
+    sql = "select title from crawler_csdnblog"
 
     try:
         cursor.execute(sql)
@@ -32,7 +34,6 @@ def write_file():
 def cut_words():
     with open('text.txt', 'r', encoding='utf-8') as content:
         for line in content:
-            # new_line = re.sub("[\s+\.\!\/_,$%^*(\"\']+|[+——！，。？、~@#￥%……&*（）,._，。/]+", "",line)
             seg_list = jieba.cut(line)
             with open('seg_text.txt', 'a', encoding='utf-8') as output:
                 output.write(' '.join(seg_list))
@@ -50,14 +51,14 @@ def train():
                               window=context, sg=1, sample=downsampling)
     model.init_sims(replace=True)
     # 保存模型，供日后使用
-    model.save("model")
+    model.save("/Users/samr/CSDN_SearchEngine/data/word2Vec/model")
 
 
 if __name__ == '__main__':
     write_file()
     cut_words()
     train()
-    model = Word2Vec.load('model')
+    model = Word2Vec.load('/Users/samr/CSDN_SearchEngine/data/word2Vec/model')
     s = model.most_similar(['python','入门'],topn=10)  # 根据给定的条件推断相似词
     query = '将html模板文件 放在templates文件夹中'
     seg_list = []

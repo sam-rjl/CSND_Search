@@ -4,20 +4,25 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils import timezone
 
-from CSDN_SearchEngine.settings import BASE_DIR
-from .models import *
-from search_engine.searcher import whoosh_text
 import jieba
+from .models import *
 from gensim.models import Word2Vec
+# import sys
+# sys.path.append('..')
+from CSDN_SearchEngine.settings import BASE_DIR
+from search_engine.searcher import whoosh_text
+# import os
+# os.environ.setdefault('DJANGO_SETTING_MODULE', 'MyDjango.settings')
+
 
 # Create your views here.
 
 # 启动searcher
 searcher = whoosh_text()
 searcher.create_searcher()
-searcher.search_document('test')
+# searcher.search_document('test')
 
-model = Word2Vec.load(BASE_DIR + '\data\word2Vec\model')
+model = Word2Vec.load(BASE_DIR + '/data/word2Vec/model')
 
 pop_query_num = 5  # 显示的热门搜索个数
 content_per_page = 10
@@ -51,7 +56,6 @@ def results(req):
     data['pop_query'] = pop_query
     results = searcher.search_document(query)
 
-    # 分词, highlightWords：高亮词汇
     seg_list = jieba.cut(query)
     highlightWords = " ".join(seg_list)
     data['highlightWords'] = highlightWords
@@ -90,8 +94,7 @@ def results(req):
     if (order == 'time'):
         results = sorted(results1, key=lambda x: x['time'], reverse=True) + results2
     elif (order == 'readcount'):
-        results = sorted(results1,
-                    key=lambda x: (int)(x['readcount']), reverse=True) + results2
+        results = sorted(results1, key=lambda x: (int)(x['readcount']), reverse=True) + results2
 
     # 分页
     paginator = Paginator(results, content_per_page)
@@ -145,14 +148,6 @@ def results(req):
         res['writer_home'] = writer_home
         results_copy.append(res)
     data['results'] = results_copy
-    # results_copy_x = sorted(results_copy,key=lambda x: (int)(x['readcount']),reverse=True)
-    # print(res['readcount'] for res in results_copy_x)
-    # if(order == 'sim'):
-    #     data['results'] = results_copy
-    # elif(order == 'time'):
-    #     data['results'] = sorted(results_copy, key=lambda x: x['time'], reverse=True)
-    # else:
-    #     data['results'] = sorted(results_copy,key=lambda x: (int)(x['readcount']),reverse=True)
 
     return render(req, 'result.html', data)
 
@@ -190,5 +185,5 @@ def topQuery(n):
     queries = Query.objects.all().values_list('query', flat=True)
     c = collections.Counter(queries).most_common(n)
     list = [i[0] for i in c]
-    # print(list)
+    print(list)
     return list

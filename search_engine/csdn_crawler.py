@@ -9,28 +9,28 @@ import urllib.request
 from selenium import webdriver
 import time
 import pickle
-from .DBsettings import *
+from DBsettings import *
 
 session = requests.Session()
 
 # 模拟登陆
 def loginPages():
     url = "https://passport.csdn.net/account/login"
-    driver = webdriver.Chrome(executable_path='/home/qb-linux/chromedriver')
+    driver = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver')
             # 要加chromedriver绝对路径 or 把chromedriver加到系统PATH里
     driver.get(url)
     switch = driver.find_element_by_xpath(
-        '//a[@class="login-code__open js_login_trigger login-user__active"]')
-    if switch.text == '账号登录':
+        '//li[@class="text-tab border-right"][2]/a')
+    if switch.text == '账号密码登录':
         switch.click()
         time.sleep(1)
 
 
-    username = driver.find_element_by_id('username')
-    password = driver.find_element_by_id('password')
-    username.send_keys("username")
-    password.send_keys("password")
-    click = driver.find_element_by_class_name("logging")
+    username = driver.find_element_by_id('all')
+    password = driver.find_element_by_id('password-number')
+    username.send_keys("15542378331")
+    password.send_keys("rjlwan221314")
+    click = driver.find_element_by_xpath('//button[@data-type="account"]')
     click.click()
     time.sleep(1)
 
@@ -42,30 +42,6 @@ def loginPages():
         session.cookies.set(cookie['name'], cookie['value'])
 
     return cookies
-
-    # CSDN登录默认二维码登录,需要点击账号登录才可以. 下面方法没有点击.
-    # html = session.get(url,headers=headers).text
-    #
-    # bs = BeautifulSoup(html,"lxml")
-    # #获取lt值
-    # lt = bs.find("input",attrs={"name":"lt"}).get("value")
-    # print(lt)
-    # #获取execution值
-    # ex = bs.find("input",attrs={"name":"execution"}).get("value")
-    # print(ex)
-    #
-    # #创建data表单数据
-    # data = {
-    #     "username":" ",
-    #     "password":" ",
-    #     "lt": lt,
-    #     "execution" : ex,
-    #     "_eventId":"submit",
-    # }
-    # #获取登录cookie值
-    # session.post(url,data=data,headers=headers)
-    # # 获取登录后页面
-    # response = session.get("http://write.blog.csdn.net/postlist",headers=headers).text
 
 
 class Page():
@@ -109,7 +85,7 @@ class Page():
         return time
 
     def get_content(self):
-        article = self.bsobj.find_all('div', class_='article_content clearfix csdn-tracking-statistics')
+        article = self.bsobj.find_all('div', class_='article_content clearfix')
         a_bf = BeautifulSoup(str(article[0]),"lxml")
         p = a_bf.find_all({'p', 'h1', 'h2', 'h3', 'h4','br'})
         content = ""
@@ -148,7 +124,7 @@ class Page():
 class CSDN_Spider(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
-        db = pymysql.connect(host, user, password, dbname)
+        conn = pymysql.connect(host, user, password, dbname)
         cur = conn.cursor()
         cur.execute("USE csdn_crawler")
         self.conn = conn
@@ -207,6 +183,7 @@ class CSDN_Spider(threading.Thread):
                 page = Page(url)
                 print('正在抓取' + url)
                 data = page.get_data()
+                print('抓取成功' + data['title'])
                 self.save_data(data)
                 self.remove(url)
                 urls = page.get_blogURLs()
@@ -229,7 +206,7 @@ class CSDN_Spider(threading.Thread):
 
 if __name__ == '__main__':
 
-    # init queue from index
+    # # init queue from index
     # url = 'https://blog.csdn.net/'
     # page = Page(url)
     # urls = page.get_blogURLs()
@@ -237,7 +214,7 @@ if __name__ == '__main__':
     # for url in urls:
     #     print(url)
     #     s.add_queue(url)
-
+#爬取url
     loginPages()
 
     spider = CSDN_Spider()
